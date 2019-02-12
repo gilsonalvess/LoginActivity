@@ -3,20 +3,25 @@ package com.dwm.ufg.service;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.StrictMode;
+import android.util.Log;
 
-import java.io.BufferedReader;
+import com.dwm.ufg.loginactivity.UserLogin;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.reflect.Type;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 public class WebServiceHandler {
 
-    private static final int TIMEOUT_MILLIS = 1500;
+    private static final String BASE_URL = "http://private-c1bd8-gilsonalves.apiary-mock.com/login";
 
     public boolean isOnline(Context contextActivity) {
         ConnectivityManager cm = (ConnectivityManager) contextActivity.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -24,49 +29,43 @@ public class WebServiceHandler {
         return networkInfo != null && networkInfo.isConnectedOrConnecting();
     }
 
-    public String getLogin() throws IOException {
+    public UserLogin obterDadosLogin() throws IOException {
 
-            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-            StrictMode.setThreadPolicy(policy);
+        OkHttpClient httpClient = new OkHttpClient();
+        final String[] resposta = new String[1];
 
+        final Request request = new Request.Builder()
+                .url(BASE_URL)
+                .build();
 
-            URL url = new URL("https://sandromoreira.docs.apiary.io/#");
-            HttpURLConnection conn = null;
-            StringBuilder sb;
-
-            try {
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-                conn.setRequestMethod("POST");
-                conn.setConnectTimeout(TIMEOUT_MILLIS);
-                conn.setReadTimeout(TIMEOUT_MILLIS);
-                conn.connect();
-                InputStream in = null;
-                int status = conn.getResponseCode();
-
-                if (status >= HttpURLConnection.HTTP_BAD_REQUEST) {
-                    in = conn.getErrorStream();
-                } else {
-                    in = conn.getInputStream();
-                }
-
-                sb = new StringBuilder();
-                BufferedReader br = new BufferedReader(new InputStreamReader(in));
-                String linha = null;
-                while ((linha = br.readLine()) != null) {
-                    sb.append(linha);
-                }
-
-                br.close();
-                in.close();
-            } catch (IOException e) {
-                throw e;
-            } finally {
-                if (conn != null) {
-                    conn.disconnect();
-                }
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
             }
-            return sb.toString();
-        }
 
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                ResponseBody responseBody = response.body();
+
+                if (!response.isSuccessful()) {
+                    throw new IOException("Error response " + response);
+                }
+                resposta[0] = responseBody.string();
+            }
+        });
+        return jsonForObject(resposta[0]);
+    }
+
+    private  UserLogin jsonForObject(String userLoginJson) {
+        Gson gson = new Gson();
+
+        try {
+            Type userLoginType = new TypeToken<UserLogin>() {}.getType();
+            return gson.fromJson(userLoginJson, userLoginType);
+        } catch (Exception e) {
+            Log.e("Erro ao criar JSON", e.getMessage());
+        }
+        return null;
+    }
 }
