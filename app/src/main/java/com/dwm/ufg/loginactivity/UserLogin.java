@@ -1,23 +1,30 @@
 package com.dwm.ufg.loginactivity;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
 public class UserLogin {
+
+    @SerializedName("email")
+    @Expose
     private String email;
-    private String token;
+    @SerializedName("senha")
+    @Expose
     private String senha;
+    @SerializedName("token")
+    @Expose
+    private String token;
 
-    public UserLogin() {
-    }
-
-    String getEmail() {
+    public String getEmail() {
         return email;
-    }
-
-    String getSenha() {
-        return senha;
     }
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getSenha() {
+        return senha;
     }
 
     public void setSenha(String senha) {
