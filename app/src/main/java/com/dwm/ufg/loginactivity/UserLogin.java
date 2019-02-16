@@ -3,7 +3,9 @@ package com.dwm.ufg.loginactivity;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class UserLogin {
+import java.io.Serializable;
+
+public class UserLogin implements Serializable {
 
     @SerializedName("email")
     @Expose
